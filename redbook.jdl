@@ -1,0 +1,175 @@
+application {
+  config {
+    baseName RedBook
+    applicationType monolith
+    packageName com.laofansay.work
+    authenticationType jwt
+    prodDatabaseType mongodb
+    clientFramework react
+    databaseType mongodb
+  }
+  entities *
+}
+
+
+
+/**渠道**/
+entity Channels {
+  name String required      /**渠道名称**/
+  category ChannelCate required     /**渠道类别**/
+  rate Integer     required             /**比例**/
+  props String
+  open Boolean        required        /**渠道是否开放**/
+
+}
+
+enum ChannelCate {
+  SmallRedBook("小红书")
+  ByteDance("抖音")
+  MeiTuan("美团")
+
+
+}
+
+
+/**客户**/
+entity Customer {
+  name String     required        /**客户名称**/
+  mobile String                    /**客户手机号**/
+  email String                     /**客户邮箱**/
+  introduce String                    /**客户介绍**/
+  balance BigDecimal  required    /**账户余额**/
+  times Integer     required    /**可用次数**/
+  status CstStatus  required   /**状态**/
+  createdDate Instant        /**添加时间**/
+
+}
+
+
+enum CstStatus {
+  ENABLED("启用")
+  DISABLED("停用")
+  LOCKED("锁定")
+
+}
+/**小红书用户**/
+entity CstAccount {
+  name String   required  /**名称**/
+  provider String   required  /**账号提供方**/
+  rbAccount String   required /**账号**/
+  rbPwd String   required /**密码**/
+  rbToken String   /**token**/
+  status CstStatus   required /**状态**/
+  timesByDay Integer   required /**当天使用次数**/
+  createdDate Instant   /**添加时间**/
+  channel String    required       /**客户类型**/
+}
+
+
+
+/**小红书任务**/
+entity CstJob {
+  name String        required /**任务名称**/
+  executeType ExecuteType required /**执行方式**/
+  category String      /**任务类型**/
+  status JobStatus  required /**状态状态**/
+  createdDate Instant    required /**添加时间**/
+  jobProps String   required  /**任务业务参数**/
+  channel ChannelCate  required  /**客户渠道**/
+}
+
+enum JobStatus {
+  OVER("结束了")
+  READY("准备好了")
+  ERROR("异常")
+
+}
+
+
+
+/**小红书任务强果**/
+entity JobResult {
+  name String        required /**任务名称**/
+  jobUrl String        required /**任务url**/
+  authorName String        required /**任务作者名称**/
+
+  accountId String        required /**账户Id*/
+  customerId String        required /**账户Id*/
+  status JobStatus    required /**任务状态**/
+  jobDate LocalDate     required /**任务日期**/
+  jobNo String        required /**任务编号**/
+  builderDate Instant       required/**生成时间时间**/
+  replay String       required/**回复内容**/
+  replayTheme String       required/**回复主题**/
+  replayImage ImageBlob     /**回复结果截图**/
+  replayDate Instant     /**回复时间**/
+  effReplay Boolean       /**有效的回复**/
+  settlement Boolean      /**是否结算**/
+  settlementOrder Boolean    /**结算订单号**/
+  settlementDate Instant    /**结算时间**/
+  errorMsg String         /**异常描述**/
+  errorImage ImageBlob     /**异常截图**/
+  channel ChannelCate  required  /**客户渠道**/
+}
+
+
+relationship OneToMany {
+  Channels  to  Customer
+  Customer to CstAccount
+  Customer to CstJob
+  CstJob  to JobResult
+
+}
+
+relationship ManyToMany {
+
+    JobOrder to JobResult
+
+}
+
+
+/**小红书任务强求果**/
+entity JobOrder {
+  settlementOrderNo String     required /**任务名称**/
+  amount BigDecimal  required /**总金额**/
+  paymentStatus PaymentStatus    required /**任务状态**/
+  settlementDate Instant     required /**结算时间**/
+  paymentDate Instant        required /**支付时间**/
+  customerId Long        required /**客户Id**/
+  channel String  required  /**客户渠道**/
+
+}
+
+enum PaymentStatus {
+  WAIT
+  PAYING
+  COMPLETE
+}
+
+
+
+
+
+enum ExecuteType {
+  ONCE("行行一次")
+  DAY("每次天执行")
+}
+
+
+enum Status {
+  ENABLED("启用")
+  DISABLED("停用")
+
+}
+
+
+
+
+
+
+service all with serviceClass
+filter *
+paginate * with pagination
+
+
+
