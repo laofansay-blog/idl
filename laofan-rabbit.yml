@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  mysql:
+    hostname: mysql
+    container_name: mysql
+    image: mysql:8
+    volumes:
+      - ./mysql/:/var/lib/mysql/
+    environment:
+      LANG: C.UTF-8
+      MYSQL_ROOT_PASSWORD: "laofansay"
+      MYSQL_DATABASE: "root"
+    ports:
+      - 3306:3306
+    networks:
+      laofansay:
+        ipv4_address: 171.20.0.10
+    command: mysqld --lower_case_table_names=1 --skip-ssl --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
+  redis:
+    hostname: redis
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6393:6379
+    command: redis-server --requirepass laofansay
+    volumes:
+      - ./redis-data/data:/data
+      - ./redis-data/conf/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-data/logs:/logs
+    networks:
+      laofansay:
+        ipv4_address: 171.20.0.11
+
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=laofansay
+      - RABBITMQ_DEFAULT_PASS=laofansay
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      laofansay:
+        ipv4_address: 171.20.0.12
+
+networks:
+  laofansay:
+    ipam:
+      config:
+        - subnet: 171.20.0.0/16
