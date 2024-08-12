@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    restart: always
+    container_name: gitlab
+    hostname: "git.pobing.com" # 也可以使用IP地址
+    privileged: true
+    ports:
+      - "7321:7321"
+      - "7422:22"
+    volumes:
+      - ./gitlab_config:/etc/gitlab
+      - ./gitlab_logs:/var/log/gitlab
+      - ./gitlab_data:/var/opt/gitlab
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['time_zone'] = 'Asia/Shanghai'
+        external_url 'https://git.pobing.asia'
+        nginx['enable'] =false
+        # 设置非捆绑 Web 服务器用户的用户名
+        web_server['external_users'] = ['root', 'nginx', 'www-data']
+        # 将非捆绑的 Web 服务器添加到受信任代理列表中，我自己的nginx服务器ip地址
+        gitlab_rails['trusted_proxies'] = ['nginx服务器ip地址']
+        # 监听自定义端口，监听的端口要和暴露的端口要一致
+        gitlab_workhorse['listen_network'] = "tcp"
+        gitlab_workhorse['listen_addr'] = "0.0.0.0:7321"
+    networks:
+      xiha:
+        ipv4_address: 171.20.0.13
+
+networks:
+  xiha:
+    ipam:
+      config:
+        - subnet: 171.20.0.0/16
