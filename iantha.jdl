@@ -1,0 +1,227 @@
+
+application {
+  config {
+    baseName iantha
+    applicationType monolith
+    packageName com.laofan.iantha
+    authenticationType jwt
+    prodDatabaseType postgres
+    clientFramework react
+  }
+  entities *
+}
+
+
+
+
+
+
+/**购物车**/
+entity Cart {
+  ident Long required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+/**购物项目**/
+entity CartItem {
+  cid String required,
+  prodId String required,
+  count Integer required
+}
+
+
+/**品牌**/
+entity Brand {
+  title String required unique,
+  description String,
+  logo String
+}
+
+enum ProdStatus {
+  PRE  ("预约发布")
+  HOT  ("热门")
+  EXP("正常")
+  DOWN("售罄")
+}
+
+entity Product {
+  title String required,
+  transCode String      required /**商品编码***/
+  description String,
+  images String                             /**默认图***/
+  keywords String,
+  metadata TextBlob,
+  guidePrice BigDecimal required min(0)   required /**成本价***/
+  price BigDecimal required min(0)   required /**平台销售单价***/
+  showPrice BigDecimal required min(0)   required /**画线价***/
+  discount Integer required, /**折扣**/
+  stock Integer required,     /**库存**/
+  isPhysical Boolean required, /**是否物理商品**/
+  isAvailable Boolean required, /**是否可用**/
+  isFeatured Boolean required,  /**是否物色**/
+  status ProdStatus                         /**状态***/
+  sellCount Integer                  /**销量,此处简单维护,期望接入进入销存系统***/
+  stockCount Integer                  /**库存,此处简单维护,期望接入进入销存系统**/
+  shelvesStatus Boolean               /**上架状态***/
+  shelvesDate Instant                /**上架时间***/
+  createdAt Instant required,
+  updatedAt Instant required  
+}
+
+entity Category {
+  title String             required  /**商品名称***/
+  description String      required /**分类描述***/
+  cateCode String      required /**分类编码***/
+  icon String      required /**分类图标***/
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+
+/** 商品规模 **/
+entity BabySpec {
+  specCode String      required          /**规格编码***/
+  specTitle String     required          /**规规格标题***/
+  description String      required       /**规模规格描述***/
+  specQuantity Integer   required        /**规规格标题***/
+  guidePrice BigDecimal required min(0)   required /**成本价***/
+  specPrice BigDecimal required min(0)   required /**单价***/
+  showPrice BigDecimal required min(0)   required /**画线价***/
+  specStatus ProdStatus   required     /**规格状态***/
+  images String       required         /**规格图片***/
+  sellCount Integer                    /**销量,此处简单维护,期望接入进入销存系统***/
+  stockCount Integer                   /**库存,此处简单维护,期望接入进入销存系统**/
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+
+/** 商品标签 **/
+entity BabyLabel {
+  title String required                     /**标签名称***/
+  labelCate LabelCate  required             /**标签分类***/
+  labelCode String required                 /**标签编码***/
+  labelAttr String required                 /**标签附加属性***/
+  identify String  required                     /**创建者ID***/
+  ruleReadme TextBlob                       /**规则说明富文本***/
+  ruleExpression TextBlob                  /**规则说明富文本***/
+}
+/**标签分类***/
+enum LabelCate {
+  SEARCH("搜索类")
+  STAT("统计类")
+  RULE("规则类")
+  ACTIVITY("活动类")
+  NONE("其它")
+}
+
+
+
+entity Order {
+  number Integer required unique,
+  status String required,
+  total Float required,
+  shipping Float required,
+  payable Float required,
+  tax Float required,
+  discount Float required,
+  isPaid Boolean required,
+  isCompleted Boolean required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+entity OrderItem {
+  orderId String required,
+  productId String required,
+  count Integer required,
+  price Float required,
+  discount Float required
+}
+
+entity Address {
+  country String required,
+  address String required,
+  city String required,
+  phone String required,
+  postalCode String required,
+  createdAt Instant required
+}
+
+entity Notification {
+  ident String required,
+  content String required,
+  isRead Boolean required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+entity DiscountCode {
+  code String required unique,
+  stock Integer required,
+  description String,
+  percent Integer required,
+  maxDiscountAmount Float required,
+  startDate Instant required,
+  endDate Instant required,
+  createdAt Instant required
+}
+
+entity Refund {
+  amount Float required,
+  reason String required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+entity Payment {
+  number Integer required unique,
+  status String required,
+  refId String required unique,
+  cardPan String,
+  cardHash String,
+  fee Float,
+  isSuccessful Boolean required,
+  payable Float required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+entity PaymentProvider {
+  title String required unique,
+  description String,
+  websiteUrl String,
+  isActive Boolean required
+}
+
+
+
+
+
+entity Banner {
+  label String required,
+  images String required,
+  createdAt Instant required,
+  updatedAt Instant required
+}
+
+// Relationships
+
+relationship ManyToOne {
+ 	BabyLabel{products} to Product {label}
+}
+relationship ManyToOne {
+ 
+  Cart{items} to CartItem{cart}
+  CartItem{product} to Product{cartItems}
+  BabySpec{products} to Product {spec}
+
+  Product{brand}  to Brand{products}
+  Product{categories}  to   Category{products}
+  
+  Order{refund} to Refund{order}
+  Payment{order} to Order{payments}
+  Payment{provider} to PaymentProvider{orders}
+  DiscountCode{order} to Order{discountCode}
+}

@@ -1,0 +1,978 @@
+/*
+ * This is a microservice e-commerce store sample with Gateway and three microservice applications
+ * This uses JHipster registry for service discovery and JWT authentication
+ */
+//
+//application {
+//  config {
+//    baseName gateway
+//    applicationType gateway
+//    packageName com.dy.gateway
+//    serviceDiscoveryType eureka
+//    authenticationType jwt
+//    buildTool maven
+//    serverPort 8080
+//    clientFramework vue
+//    testFrameworks [cypress,cucumber]
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    jhiPrefix sys
+//    reactive false
+//  }
+//  entities *
+//}
+
+
+/**菜单**/
+entity Menu {
+  name String required      /**菜单名称**/
+  path String               /**菜单名称**/
+  componentName   String    /**组件名称**/
+  componentTitle String     /**组件标题**/
+  level Integer  required   /**级别**/
+  sortNo Integer              /**排序**/
+  icon    String              /**icon**/
+  createdBy      String           /**创建人**/
+  createdDate    Instant           /**创建时间**/
+  updateBy      String           /**更新人**/
+  updateDate    Instant           /**更新时间**/
+  status         String           /**按钮权限状态(0无效1有效)'**/
+}
+
+entity AuthorityMenu(jhi_authority_menu) {
+  authorityName  String required  /**商品名称**/
+  authorityTitle String required  /**商品名称**/
+}
+
+entity RestResources (jhi_resources) {
+  name String required  /**资源名称**/
+  desc String  required  /**资源说明**/
+  method String required  /**请求方式**/
+  path   String required  /**资源路程**/
+  model String required  /**资源模块**/
+  serviceInstant  String required  /**服务名称**/
+  requestExample  String required  /**请注参数**/
+  responseExample  String required  /**返回参数**/
+  classFullPath    String required  /**资源全路径**/
+}
+
+relationship OneToMany {
+  Menu{children} to Menu
+}
+
+relationship OneToMany {
+  AuthorityMenu to Menu
+}
+
+relationship ManyToMany {
+  Menu to RestResources
+}
+
+
+
+
+/** Product sold by the Online store */
+entity Baby {
+  name String required  /**商品名称**/
+  transCode String      required /**商品编码**/
+  description String    /**说明**/
+  price BigDecimal required min(0)   required /**单价**/
+  image ImageBlob
+  remark  TextBlob             		   /**说明**/
+  status BabyStatus            		     /**状态**/
+  ShelvesStatus    Boolean               /**上架状态**/
+  ShelvesDate      Instant               /**上架时间**/
+
+}
+
+/** 商品分类 */
+entity BabyCate {
+  name String             required  /**商品名称**/
+  description String      required /**分类描述**/
+  cateCode    String      required /**分类编码**/
+}
+
+/**服务商品**/
+entity BabyGhost {
+  name String required  /**商品名称**/
+  transCode String      required /**商品编码**/
+  description String    /**说明**/
+  guidePrice BigDecimal required min(0)   required /**单价**/
+  price BigDecimal required min(0)   required /**单价**/
+  image ImageBlob
+  groupBuyStartDate Instant              /**开拼时间**/
+  groupBuyEndDate   Instant              /**开接束时间**/
+  status BabyStatus            		     /**状态**/
+  shelvesStatus    Boolean               /**上架状态**/
+  shelvesDate      Instant               /**上架时间**/
+  serviceIdentify String  required		           /**服务商ID**/
+}
+
+/** 商品分类规模 */
+entity BabyCateSpec {
+  name String required  			 /**规模名称**/
+  specCode String      required      /**规模编码**/
+  specTitle String     required     /**规模编码**/
+  description String      required  /**规模编码**/
+}
+
+/** 商品素材管理 */
+entity BabyMaterial {
+  name String required  			 /**标签名称**/
+  code String required  			 /**标签名称**/
+  tag String required  			     /**标签名称**/
+  materialType  MaterialType         required
+  identify String  required		      /**上传者ID**/
+  refTimes Integer   required		   /**引用次数**/
+  createdBy  String required  		   /**上传传人**/
+  privately   Boolean required  	    /**私有的**/
+  createdDate Instant  			       /**使用时间**/
+  remark String      required  /**说明**/
+
+}
+/**素材附件*/
+entity Attachment {
+  filename  String required  			 /**标签名称**/
+  filesize  String required  			 /**标签名称**/
+  ossPath   String required  			 /**标签名称**/
+  remark String      required  /**说明**/
+}
+/**收费标准*/
+entity BabyMaterialFee {
+  materialFeeCate MaterialFeeCate   required  	/**标签名称**/
+  times Integer   	                            /**标签名称**/
+  fee  BigDecimal        required  		        /**标签名称**/
+  remark String      required  /**说明**/
+
+}
+/**素材使用收费标准：次，提，月，免费，一次数 **/
+enum MaterialFeeCate {
+  TIMES
+  YEAR
+  MONTH
+  FREE
+  DISPOSABLE
+}
+/***素材类型：图片、视频、文案，其它**/
+enum MaterialType {
+  IMAGE
+  VIDEO
+  WORD
+  NONE
+}
+
+/** 商品标签 */
+entity BabyLabel {
+  name String required  			          /**标签名称**/
+  labelCate LabelCate  required  			 /**标签分类**/
+  labelCode String required  			 /**标签名称**/
+  labelAttr String required  			     /**标签附加属性**/
+  identify String  required		            /**提供商品ID**/
+  ruleReadme  TextBlob                      /**规则说明富文本**/
+  ruleExpression  TextBlob                 /**规则说明富文本**/
+}
+
+
+/**标签分类**/
+enum LabelCate {
+  SEARCH
+  STAT
+  RULE
+  NONE
+}
+
+
+
+
+application {
+  config {
+    baseName baby
+    applicationType microservice
+    packageName com.anya.baby
+    serviceDiscoveryType eureka
+    authenticationType jwt
+    prodDatabaseType mysql
+    devDatabaseType h2Disk
+    buildTool maven
+    serverPort 8081
+    skipUserManagement true
+    jhiPrefix bab
+  }
+  entities Baby,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee,BabyLabel
+}
+
+service Baby,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee,BabyLabel with serviceClass
+service Baby,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee,BabyLabel with serviceImpl
+paginate Baby,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee,BabyLabel with infinite-scroll
+dto Baby,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee ,BabyLabel with mapstruct
+microservice Baby,Cart,BabyCate,Cart,BabyCate,BabyCateSpec,BabyGhost,BabyMaterial,Attachment,BabyMaterialFee,BabyLabel with baby
+
+
+
+relationship OneToMany {
+  BabyCate to BabyCateSpec
+  BabyCate{parent} to BabyCate
+  Baby to BabyLabel
+  BabyGhost to BabyLabel
+  Baby to BabyMaterial
+  BabyMaterial to Attachment
+  Attachment to BabyMaterialFee
+  Baby to BabyGhost
+}
+
+
+relationship ManyToMany {
+  Baby to BabyCate
+}
+
+/** 购物车 */
+entity Cart {
+  identify String    required	   /**用户标识码**/
+  name String 		  required     /**商品名称**/
+  transCode String      required   /**商品编码**/
+  description String    		       /**说明**/
+  price BigDecimal 	required min(0)   required /**单价**/
+  quantity Integer    /**数量**/
+  expirationDate Instant              /**过期时间**/
+  status Integer
+  createdDate    Instant    required  /**添加时间**/
+}
+
+enum BabyStatus {
+  PRE
+  HOT
+  EXP
+  DOWN
+}
+
+
+
+//
+//application {
+//  config {
+//    baseName order
+//    applicationType microservice
+//    packageName com.dy.order
+//    serviceDiscoveryType eureka
+//    authenticationType jwt
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    buildTool maven
+//    serverPort 8082
+//    skipUserManagement true
+//    jhiPrefix ord
+//  }
+//
+//  entities Order, OrderFlow,OrderExempt
+//}
+//
+//service Order,OrderFlow,OrderExempt  with serviceClass
+//service Order,OrderFlow,OrderExempt  with serviceImpl
+//
+//paginate  Order, OrderFlow,OrderExempt with  infinite-scroll
+//dto Order,OrderFlow,OrderExempt with mapstruct
+//microservice Order,OrderFlow,OrderExempt with order
+
+
+entity Order {
+  orderNo  String                     /**订单编号**/
+  status OrderStatus required        /**订单状态**/
+  babyCode String 	required       /**商品编码**/
+  babyName String 	required       /**商品名称**/
+  transCode String 	required       /**商品编码**/
+  spec String 	required           /**规格**/
+  quantity Integer  required     	   /**数量**/
+  price BigDecimal   required min(0)   required /**单价**/
+  orderTotal BigDecimal   required min(0)   required /**订单总额**/
+  tradeTotal BigDecimal   required min(0)   required /**订单交易总额**/
+  groupCircleNo  String required           	/**编号**/
+  buyIdentify String    required		    	/**订单标识码**/
+  sellIdentify String    required		    	/**商品买方Id**/
+  serviceIdentify String    required		    	/**商品服务商品Id**/
+  masterOrderNo  String                       /**拼单订单号**/
+  master         Boolean                      /**是否发起者**/
+  buyIdentify String    required		    	/**订单标识码**/
+  sellIdentify String    required		    	/**商品买方Id**/
+  category       OrderCategory  required		    	/**订单类别**/
+  createdBy      String               /**添加人**/
+  createdDate    Instant    required  /**添加时间**/
+}
+
+/**类单类型**/
+enum OrderCategory {
+  BABY
+  COUPON
+  WITHDRAWAL
+  RECHARGE
+  REFUND
+}
+/**订单的物流**/
+entity OrderFlow {
+  orderNo  String                   /**订单编号**/
+  babyName String 	required        /**商品名称**/
+  status FlowStatus  required       /**订单状态**/
+  buyIdentify String    required	/**订单标识码**/
+  province  String      required    /**收货人省**/
+  city      String      required    /**收货人市**/
+  area      String      required    /**收货人区**/
+  address   String      required     /**街道**/
+  sir       String      required     /**姓名**/
+  phone     String      required    /**电话**/
+  flowName  String                  /**物流公司**/
+  flowOrderNo    String             /**物流订号**/
+  flowPhone       String             /**物流电话**/
+  flowFee    BigDecimal  required min(0)   /**物流费用**/
+  flowRemark  String                       /**物流说明**/
+  signWay    BabySignWay                /**签收方式**/
+  createdBy      String                 /**添加人**/
+  createdDate    Instant                /**添加时间**/
+  sellRemark         String    		    /**卖家说明**/
+  buyRemark         String    		    /**买家说明**/
+}
+
+/**订单优惠明细**/
+entity OrderExempt{
+  orderNo  String                  /**订单编号**/
+  identify String      required    /**用户标识码**/
+  exemptPolicy String     required /**优惠策略**/
+  type   ExemptType        /**优惠类型**/
+  exemptTitle   String      required /**优惠标题**/
+  blendCode    String         required /**核销码**/
+  beforeTotal   BigDecimal   required /**优惠前金额**/
+  afterTotal   BigDecimal  required   /**优惠后金额**/
+  exemptTotal   BigDecimal  required  /**优惠金额**/
+  exemptFor    TransFor    required   /**核销方式**/
+  refundable   Boolean     required   /**是否可退**/
+  createdBy      String               /**添加人**/
+  createdDate    Instant    required  /**添加时间**/
+
+
+}
+
+/**订单评价**/
+entity Comments{
+  babyCode String 	required       /**商品编码**/
+  orderNo  String   required
+  content  String   required/**评价内容**/
+  showPicture String   required/**评价晒图**/
+  showVideo   String   required/**评价视频**/
+  status   String    required /**审核状态**/
+  start    Integer   required /**星级**/
+  identify String      required /**评价ID**/
+  identifyName String      required /**评价人名称**/
+  identifyAvatar String      required /***评价人名称头像*/
+  createdDate    Instant    required  /**添加时间**/
+  superCount  Integer   required /**点赞数**/
+
+  //  goodStartCount  Integer   required /**好评数**/
+  //  midStartCount  Integer   required /**中评数**/
+  //  badStartCount  Integer   required /**差评数**/
+
+}
+
+/**订单评价点赞明细**/
+entity CommentsSuper{
+  identify String      required /**添加人**/
+  createdDate    Instant    required  /**添加时间**/
+}
+relationship  OneToMany{
+  Comments  to CommentsSuper
+  Comments  to Comments{children}
+}
+
+/**优惠类型**/
+enum ExemptType {
+  A,B,C
+}
+
+
+/**签收方式**/
+enum BabySignWay {
+  DEF
+  SELF_GET
+  CONFIRM
+}
+
+
+/**支付订单**/
+entity OrderTrans {
+  orderNo  String                				/**订单编号**/
+  transOrderNo String     required            /**交易订单编号**/
+  transSerial String                  	      /**交易流水号**/
+  transTotal BigDecimal                  	    /**交易金额**/
+  tradeStatus TradeStatus required            /**交易状态**/
+  tradeCompleteDate   Instant                 /**交易完成时间**/
+  transFor TransFor                          /**交易方向**/
+  transCate TransCate                         /**交易类型**/
+  paymentMethod  PaymentMethod required       /**付款方式**/
+  buyIdentify String    required		    	/**订单标识码**/
+  sellIdentify String    required		    	/**商品买方Id**/
+  createdDate Instant required                 /**创建时间**/
+}
+
+/**支付账单**/
+entity Bill {
+  orderNo  	 String                		    /**订单编号**/
+  transOrderNo String     required          /**交易订单编号**/
+  tradeStatus  TradeStatus required         /**交易状态**/
+  transTotal   BigDecimal required          /**交易金额**/
+  identify 	 String    	required		    /**标识码**/
+  transSerial String     	required    	/**交易流水号**/
+  transDate 	Instant 	required         /**交易时间**/
+  transFor    TransFor 	required      	      /**交易方向**/
+  transCate   TransCate    required           /**交易类型**/
+  accountName String           required       /**分账方名称**/
+  billTitle  String           required        /**分账标题**/
+  billPolicy BillPolicy       required        /**分账策略**/
+  billRate   BigDecimal       required        /**分账比例**/
+  billTail   BigDecimal       required        /**分账尾巴**/
+  billRemark  String       required           /**分账说明*/
+}
+/**分销分润**/
+enum BillPolicy {
+  A,B,
+  Profit_Sharing
+}
+
+
+/**服务商共享利润池**/
+entity SellerShareProfitPool{
+  spiltDate Instant required                        /**分润日期**/
+  divisibleTotal  BigDecimal     required           /**可分总额=beforeBalance+todayTotal**/
+  balance BigDecimal     required                   /**昨日余额**/
+  divisibleTodayTotal    BigDecimal     required    /**可分当日总额**/
+  memDivisibleTotal  BigDecimal     required           /**用户池可分总额=beforeBalance+todayTotal**/
+  memBalance BigDecimal     required                   /**用户池昨日余额**/
+  memDivisibleTodayTotal    BigDecimal     required    /**用户池可分当日总额**/
+
+}
+
+
+/**服务商分销清单**/
+entity SellerSplitManifest{
+  spiltDate Instant required                          /**分账日期**/
+  identify  String     required                       /**分账服务商**/
+  memberCategory MemberCategory      required	      /**会员类型**/
+  splitToday    BigDecimal     required               /**服务商消费总额**/
+  splitBalance BigDecimal     required                /**服务商余额**/
+  splitLeverage  BigDecimal     required              /**服务商分账杠杆**/
+  spiltTimes BigDecimal     required                  /**服务商当时分账次数**/
+  spiltTotalTimes BigDecimal     required             /**服务商可分总次数**/
+  spiltRate   BigDecimal     required                 /**服务商当时比例**/
+  spiltBalance   BigDecimal     required              /**服务商分账当时余额**/
+  total       BigDecimal     required                 /**服务商分得金额**/
+  transOrderNo String       required      		      /**分账支付订单**/
+  status      Integer      required      		      /**分账支付状态**/
+  createdDate  Integer      required      		      /**分账时间**/
+  completedDate  Integer      required      		      /**完成时间**/
+}
+//
+//application {
+//  config {
+//    baseName pay
+//    applicationType microservice
+//    packageName com.dy.pay
+//    serviceDiscoveryType eureka
+//    authenticationType jwt
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    buildTool maven
+//    serverPort 8088
+//    skipUserManagement true
+//    reactive false
+//    jhiPrefix pay
+//  }
+//  entities Bill,OrderTrans,SellerShareProfitPool,SellerSplitManifest
+//}
+//
+//
+//service OrderTrans,Bill,SellerShareProfitPool,SellerSplitManifest with serviceClass
+//service OrderTrans,Bill,SellerShareProfitPool,SellerSplitManifest  with serviceImpl
+//paginate  OrderTrans,Bill,SellerShareProfitPool,SellerSplitManifest with  infinite-scroll
+//dto OrderTrans,Bill,SellerShareProfitPool,SellerSplitManifest with mapstruct
+//microservice OrderTrans,Bill,SellerShareProfitPool,SellerSplitManifest with pay
+//
+
+
+
+/**收货地址**/
+entity MemAddress {
+  alias     String                        /**别名**/
+  province  String required
+  city      String required
+  area      String required
+  address   String  required                      /**地址**/
+  sir       String  required
+  phone     String   required
+  master    Boolean  required                    /**主要的**/
+  identify  String   required		      /**标识码**/
+  createdDate         Instant
+
+}
+entity MemFav {
+  identify String   required		           /**标识码**/
+  bizCode    String    required	   /**标识码**/
+  bizDesc     String  required	   /**收藏内容的描述信息**/
+  bizIcon    String    required	   /**icon**/
+  bizTitle     String  required	   /**收藏标题**/
+  link     String                   /**链接**/
+  favCate  FavCate   required    	           /**收藏类型**/
+  createdDate   Instant
+
+}
+
+/**会员**/
+entity Member {
+  identify String       required		       /**标识码**/
+  nikeName  String       required              /**用户账号**/
+  balance  BigDecimal   		               /**余额**/
+  points   Integer                             /**积分**/
+  opportunity       Integer                    /**红包机会**/
+  status   String    required	              /**状态**/
+  payPwd   String    	                      /**支付密码**/
+  phone    String    	                      /*用户手机号**/
+  avatar    String                            /*用户手机号**/
+  idCard    String                            /*证件号码**/
+  idCardName  String                   /**证件号姓名**/
+  idCardType   String                         /*证件类型**/
+  realName     Boolean    required            /**是否实名**/
+  memberCategory MemberCategory      required	               /**会员类型**/
+  qrCode  String                              /*邀请二维码**/
+  inviteCode  String       required            /*我邀请码**/
+  parentInviteCode  String                    /*我的推荐人邀请码**/
+  createdDate         Instant                 /**创建时间**/
+  sellerLevel String required /**会员等级**/
+}
+
+
+/**用户类型：用户,服务商业,提供商，运营**/
+enum MemberCategory {
+  MEMBER
+  SELLER
+  PROVIDER
+  SALE
+}
+
+
+enum Start {
+  START
+  START_ONE
+  START_TWO
+  START_THR
+}
+/**服务商权益**/
+entity MemLevelConfig{
+  conditionInviteMemCount  Integer  required    /**邀请用户数**/
+  identify   String     required                /**用户标识**/
+  showBabyCount Integer required                /**显示的商品数**/
+  privateShareProfitRate  BigDecimal required    /**利润共享比例**/
+  publicShareProfitRate  BigDecimal required    /**利润共享比例**/
+  showOtherBody  Boolean  required              /*显示其它店铺商品**/
+  showBabyProviderPrice   Boolean  required     /*显示商品采购价**/
+}
+
+
+/**用户积分明细**/
+entity MemPoint {
+  identify String   required		           /**标识码**/
+  score Integer     required		       /**分值**/
+  category PointWay						   /**积分类别**/
+  bizCode  String
+  desc  String   required		           /**标识码描述**/
+  createdDate Instant
+}
+
+/**用户积分/机会兑换**/
+entity MemPointExchange {
+  identify String   required		           /**标识码**/
+  name  String     required		              /**积分名称称**/
+  desc  String     required		              /**积分描述**/
+  score  String     required		          /**分数值**/
+  category ExchangeCategory            required
+  creteDate Instant                   required
+}
+
+
+relationship  OneToOne{
+  Member to MemBaseInfo
+  Member to MemPointExchange
+}
+
+relationship  OneToMany{
+  Member to MemLevelConfig
+  MemBaseInfo  to MemBaseInfoAttachment
+}
+
+
+/**服务商基本信息**/
+entity MemBaseInfo{
+  identify   String     required    /**用户标识**/
+  shopIcon        String      /**long**/
+  shopName        String      /**用户标识**/
+  shopTitle       String      /**用户标识**/
+  shopIntroduce   String      /**用户标识**/
+  shopMan          String      /**联系人**/
+  shopPHone        String      /**联系人电话**/
+  shopDomain       String      /**域名**/
+  province  String
+  city      String
+  area      String
+  address   String                        /**街道，社区，村**/
+  lat       String                        /**坐标**/
+  lng       String                        /**坐标**/
+  remark    String                        /*协议**/
+}
+
+
+/**素材附件*/
+entity MemBaseInfoAttachment {
+  infoCate InfoCate         /**证件分类**/
+  infoName  String required  			 /**标签名称**/
+  infoSize  String required  			 /**标签名称**/
+  infoOssPath   String required  			 /**标签名称**/
+  infoSort  Integer   			 /**标签名称**/
+  remark String        /**说明**/
+}
+
+
+enum InfoCate{
+  ID_CARD
+  LICENCE
+  BACKGROUND
+  PHOTO_WALL
+
+
+
+}
+
+/**服务商基本信息**/
+entity MemBankCard {
+  identify   String     required    /**用户标识**/
+  cardNo     String  required    /**卡号**/
+  cardType    String  required    /**卡类型**/
+  cardholderName String  required   /**持卡人姓名**/
+  cardholderPhone  String  required  /**持卡人电话**/
+  status     String  required    /**卡状态**/
+  bankCode   String  required    /**银行编号**/
+  bankName   String  required    /**银行编号**/
+  cardCreatedBankName   String  required       /**开户行名称**/
+  province  String                         /**开户行名称**/
+  city      String
+  area      String
+}
+
+enum ExchangeCategory{
+  POINT
+  OPPORTUNITY
+}
+
+enum PointWay {
+  LOGIN
+  LOGOUT
+  CONSUME
+  RECHARGE
+  INVITE
+  EXCHANGE
+}
+
+
+enum FavCate {
+  BABY
+  FRIEND
+  ORDER
+}
+
+/**交易方向**/
+enum TransFor {
+  IN
+  OUT
+}
+/**交易类型:消费通款,充值,提现,分账**/
+enum TransCate {
+  CONSUMPTION
+  REFUND
+  RECHARGE
+  WITHDRAW
+  SUB_LEDGER
+}
+/**订单状态**/
+enum OrderStatus {
+  BASE
+  PAY
+  PLAN
+  COMPLETED
+  LOCKED
+  CLOSE
+  CANCEL
+}
+/**支付状态**/
+enum TradeStatus{
+  COMPLETED
+  PENDING
+  CANCELLED
+  CLOSE
+  SUSPEND
+}
+/**物流状态**/
+enum FlowStatus{
+  UN_SIGN
+  SINGING
+  SINGED
+  SUSPEND
+}
+
+enum PaymentMethod {
+  ALI
+  WECHAT
+  BALANCE
+}
+
+
+//
+//
+//application {
+//  config {
+//    baseName member
+//    applicationType microservice
+//    packageName com.dy.member
+//    serviceDiscoveryType eureka
+//    authenticationType jwt
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    testFrameworks [cypress,cucumber]
+//    reactive false
+//    buildTool maven
+//    serverPort 8083
+//    skipUserManagement true
+//    jhiPrefix mem
+//  }
+//  entities MemAddress,MemFav,MemPoint,Member,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard,MemBaseInfoAttachment
+//}
+
+
+service MemAddress,MemFav,MemPoint,Member,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard ,MemBaseInfoAttachment with serviceClass
+service MemAddress,MemFav,MemPoint,Member,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard,MemBaseInfoAttachment  with serviceImpl
+paginate  MemAddress,MemFav,MemPoint,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard,MemBaseInfoAttachment with  infinite-scroll
+dto MemAddress,MemFav,MemPoint,Member,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard,MemBaseInfoAttachment with mapstruct
+microservice MemAddress,MemFav,MemPoint,Member,MemBaseInfo,MemPointExchange,MemLevelConfig,MemBankCard,MemBaseInfoAttachment with member
+
+
+
+/**协议类型**/
+enum AgreementsCategory{
+  AGREEMENTS
+  PRIVACY_POLICY
+  REGISTER
+  PIN
+  JOIN
+  OPEN
+}
+
+
+
+
+/**券**/
+entity Coupon{
+  title String  required         /**券名称**/
+  fceValue String  required      /**面值**/
+  category  CouponCate  required     /**类别**/
+  remark  String  required
+}
+
+enum CouponCate{
+  CASH
+  VOUCHER
+  SUBSIDY
+
+}
+/***券的发行***/
+entity CouponPublish{
+  sendIdentify   String   required    /**服务商ID**/
+  batchNo  String     required    /**批资号**/
+  createdDate Instant required    /**发行时间**/
+  publishOrderNo  String         /**订单号**/
+  publishStatus  PublishStatus     required    /**支付状态**/
+  useStatus  UseStatus     required    /**支付状态**/
+  identify   String     required    /**认领者ID**/
+  code       String     required    /**核销码**/
+  qrCode     String     required    /**核销二维码**/
+  expirationTime  Instant required    /**发行时间**/
+}
+
+enum UseStatus{
+  UN_CLAIM
+  CLAIMED
+  REVERSE
+  EXPIRE
+}
+
+
+enum PublishStatus{
+  NO
+  PAYING
+  OK
+}
+
+/**券的使用规则**/
+entity CouponRule{
+  title String  required                    /**券名称**/
+  ruleCode    CouponRuleCode  required      /**规则编号**/
+  scopeRange String  required               /**使用范围**/
+  remark  String  required                  /**说明范围**/
+}
+
+enum CouponRuleCode{
+  GLOBAL
+  BABY
+  SHOP
+  BABY_CATE
+
+}
+
+relationship OneToOne{
+  CouponPublish to Coupon
+  CouponPublish to CouponRule
+}
+//
+//application {
+//  config {
+//    baseName  coupon
+//    applicationType microservice
+//    packageName com.dy.coupon
+//    serviceDiscoveryType eureka
+//    authenticationType oauth2
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    testFrameworks [cypress,cucumber]
+//    reactive false
+//    buildTool maven
+//    serverPort 8086
+//    skipUserManagement true
+//  }
+//  entities CouponRule,Coupon,CouponPublish
+//}
+//
+//service CouponRule,Coupon,CouponPublish  with serviceClass
+//service CouponRule,Coupon,CouponPublish  with serviceImpl
+//paginate  CouponRule,Coupon,CouponPublish with  infinite-scroll
+//dto CouponRule,Coupon,CouponPublish with mapstruct
+//microservice CouponRule,Coupon,CouponPublish with coupon
+//
+//
+//application {
+//  config {
+//    baseName notification
+//    applicationType microservice
+//    packageName com.dy.notification
+//    serviceDiscoveryType eureka
+//    authenticationType jwt
+//    prodDatabaseType mysql
+//    devDatabaseType h2Disk
+//    testFrameworks [cypress,cucumber]
+//    reactive false
+//    buildTool maven
+//    serverPort 8087
+//    skipUserManagement true
+//  }
+//  entities Notification,Notification,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule
+//}
+//service Notification,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule with serviceClass
+//service Notification ,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule with serviceImpl
+//paginate  Notification,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule with  infinite-scroll
+//dto Notification,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule with mapstruct
+//microservice Notification,Banner,SearchHistory,BusinessAgreements,SellerLevel,Comments ,CommentsSuper,BannerRule with notification
+//
+
+/**app banner 金刚区/活动配置**/
+entity Banner{
+  title String required     /**创建时间**/
+  ossImagePath String required     /**图片**/
+  identify   String     required    /**用户标识**/
+  orderIndex Integer     required   /**显示顺序**/
+  openSource String required        /**跳转链接**/
+  createDate Instant required       /**创建时间**/
+  show       Boolean required       /**是否显示**/
+  main      Boolean required        /**是否总商城**/
+  bannerCategory   BannerCategory
+}
+/**金刚区/活动规则**/
+entity BannerRule{
+  title String required     /**规则名称**/
+  ruleCode String required     /**规则编码**/
+  babyLabelCode String required    /**商品链接标签**/
+  ruleReadme  TextBlob             /**规则说明富文本**/
+  ruleExpression  TextBlob             /**规则说明富文本**/
+  createDate Instant required      /**创建时间**/
+}
+
+relationship OneToOne
+{
+  Banner to BannerRule
+}
+
+enum BannerCategory {
+  BAN
+  KONG
+  ACTIVE
+
+}
+/**服务商等级**/
+entity SellerLevel {
+  identify String       		                  /**标识码**/
+  levelName  String       required               /**等级名称**/
+  levelCode  Start       required                /**等级编码**/
+  levelOrder Integer       required              /**等级排名**/
+  promotionConditions      String          /**晋升条件**/
+  createdDate         Instant                    /**创建时间**/
+
+}
+/**通知**/
+entity Notification {
+  createDate Instant required      /**创建时间**/
+  cate       String required       /**类型:好友/系统/baby/order/point/blance*/
+  link       String                /**类型:链接**/
+  details    String                /**描述**/
+  identify   String     required    /**接收人**/
+  format     NotificationType
+  sendIdentify   String     required    /**发送人**/
+}
+/***/
+enum NotificationType {
+  SYSTEM
+  EMAIL
+  PARCEL
+}
+/**商务协议**/
+entity BusinessAgreements{
+  name String         required    /**商务协议名称**/
+  category AgreementsCategory     required    /**协议类型**/
+  content TextBlob      required    /**协议类型**/
+  status  String      required    /**状态**/
+  memberCategory MemberCategory   required    /**用户类型**/
+}
+
+
+
+
+/** 商品标签 */
+entity SearchHistory {
+  keyWorld String required  			 /**搜索关键字**/
+  province  String                  required /**省**/
+  city      String                  required /**市**/
+  area      String                required /**区**/
+  count Integer  required  			     /**搜索次数**/
+  searchSource  SearchSource required    /**搜索次数**/
+  identify String  required		         /**搜索者**/
+
+}
+/**标签分类**/
+enum SearchSource {
+  SHOP
+  MAIN
+}
+
+
+
+
+
+
